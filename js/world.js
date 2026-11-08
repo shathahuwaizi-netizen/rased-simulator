@@ -50,7 +50,7 @@ export function makeGround() {
       }`,
   });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), gm);
-  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; grp.add(ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.25; grp.add(ground);
 
   // الطريق: إسفلت لامع مع خطوط المسارات
   const c = canvas(512, 512), x = c.getContext("2d");
@@ -61,7 +61,7 @@ export function makeGround() {
   x.fillStyle = "rgba(255,255,255,.85)"; x.fillRect(8, 0, 8, 512); x.fillRect(496, 0, 8, 512);
   const t = tex(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 120);
   const road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_HALF * 2, 1800),
-    new THREE.MeshStandardMaterial({ map: t, roughness: .32, metalness: .55, color: 0xffffff }));
+    new THREE.MeshStandardMaterial({ map: t, roughness: .32, metalness: .55, color: 0xffffff, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
   road.rotation.x = -Math.PI / 2; road.position.set(0, 0.0, -650); grp.add(road);
   grp.userData.ground = gm;
   return grp;

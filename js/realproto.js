@@ -195,7 +195,7 @@ export function makeRealPrototype(envMap) {
     coax.geometry.dispose(); coax.geometry = new THREE.TubeGeometry(c, 30, .022, 6, false);
   }
   updateWires(true);
-  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
   root.userData = { parts, wheels, wires, updateWires, blue };
   return root;
 }

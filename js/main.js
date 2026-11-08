@@ -5,7 +5,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { STEPS, CHAPTERS, SENSORS, C } from "./content.js";
 import * as T from "./textures.js";
@@ -59,7 +59,7 @@ function build(gltf) {
   try { if (localStorage.getItem("rased-q") === "0") QUALITY = 0; } catch (x) { /* */ }
 
   const scene = new THREE.Scene(); scene.background = W.FOG.clone(); scene.fog = new THREE.FogExp2(W.FOG, .0042);
-  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, .05, 7000);
+  const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, .2, 4200);
 
   // بيئة انعكاس: سماء المدينة + لوحات ضوء ملونة
   const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene();
@@ -93,7 +93,7 @@ function build(gltf) {
         const n = m0.name || "";
         if (n.startsWith("Paint 1")) { m.color.set(paint); m.metalness = .7; m.roughness = .28; if ("clearcoat" in m) { m.clearcoat = 1; m.clearcoatRoughness = .05; } m.envMapIntensity = 1.6; }
         else if (n.startsWith("Paint 2")) { m.color.set(accent); m.metalness = .6; m.roughness = .35; m.envMapIntensity = 1.2; }
-        else if (n === "Glass") { m = new THREE.MeshPhysicalMaterial({ name: "Glass", color: 0x0a0e18, metalness: .3, roughness: .04, transparent: true, opacity: .5, envMapIntensity: 2 }); }
+        else if (n === "Glass") { m = new THREE.MeshPhysicalMaterial({ name: "Glass", color: 0x0a0e18, metalness: .3, roughness: .04, transparent: true, opacity: .5, depthWrite: false, envMapIntensity: 2 }); }
         else if (n === "Headlight") { m.emissive = new THREE.Color(1, 1, 1.15); m.emissiveIntensity = 6; }
         else if (n === "Brakelight") { m.emissive = new THREE.Color(1, .05, .06); m.emissiveIntensity = 5; }
         else if (n === "Signallight") { m.emissive = new THREE.Color(1, .55, .1); m.emissiveIntensity = 0; }
@@ -109,7 +109,7 @@ function build(gltf) {
     const wheels = ["WheelFrontL", "WheelFrontR", "WheelRearL", "WheelRearR"].map((n) => inner.getObjectByName(n)).filter(Boolean);
     // إضاءة أرضية وأضواء أمامية
     const under = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.8), new THREE.MeshBasicMaterial({ map: T.glowTexture("rgba(47,212,255,.9)"), transparent: true, opacity: name === "hero" ? .5 : 0, depthWrite: false, blending: THREE.AdditiveBlending, color: name === "hero" ? 0x2fd4ff : 0xffffff }));
-    under.rotation.x = -Math.PI / 2; under.rotation.z = Math.PI / 2; under.position.y = .03; root.add(under);
+    under.rotation.x = -Math.PI / 2; under.rotation.z = Math.PI / 2; under.position.y = .06; under.renderOrder = 2; root.add(under);
     const hl = new THREE.SpotLight(0xdfeaff, name === "hero" ? 60 : 0, 70, .42, .6, 1.2); hl.position.set(0, .7, -2.2); hl.target.position.set(0, 0, -20); root.add(hl, hl.target);
     root.userData = { mats: [...mats.values()], wheels, inner, under, sig: [...mats.values()].find((m) => m.name === "Signallight"), brake: [...mats.values()].find((m) => m.name === "Brakelight") };
     scene.add(root); return root;
@@ -141,14 +141,14 @@ function build(gltf) {
         vec3 c = uCol * (rings*.35 + sweep*.5 + edge*2.4) + vec3(.01,.02,.04)*base;
         float al = clamp(base*.9 + rings*.5 + sweep + edge*2., 0., 1.) * uOn;
         gl_FragColor = vec4(c*uOn, al); }` }));
-  disc.rotation.x = -Math.PI / 2; disc.position.y = .05; stageG.add(disc);
+  disc.rotation.x = -Math.PI / 2; disc.position.y = .09; stageG.add(disc);
   const shadowCatch = new THREE.Mesh(new THREE.CircleGeometry(4, 64), new THREE.ShadowMaterial({ opacity: .5 }));
-  shadowCatch.rotation.x = -Math.PI / 2; shadowCatch.position.y = UNIT_Y - .01; shadowCatch.receiveShadow = true; stageG.add(shadowCatch);
+  shadowCatch.rotation.x = -Math.PI / 2; shadowCatch.position.y = UNIT_Y + .006; shadowCatch.receiveShadow = true; stageG.add(shadowCatch);
   const neonM = new THREE.MeshBasicMaterial({ color: new THREE.Color(C.cyan).multiplyScalar(3), toneMapped: false, transparent: true, opacity: 0 });
-  const neons = [[4.75, .06, .05], [3.9, UNIT_Y - .02, .03], [5.3, .02, .025]].map(([r, y, t]) => { const n = new THREE.Mesh(new THREE.TorusGeometry(r, t, 8, 160), neonM); n.rotation.x = Math.PI / 2; n.position.y = y; stageG.add(n); return n; });
+  const neons = [[4.75, .1, .05], [3.9, UNIT_Y - .02, .03], [5.3, .08, .025]].map(([r, y, t]) => { const n = new THREE.Mesh(new THREE.TorusGeometry(r, t, 8, 160), neonM); n.rotation.x = Math.PI / 2; n.position.y = y; stageG.add(n); return n; });
   // صفيحة زجاجية يقف عليها الجهاز
   const glassPlate = new THREE.Mesh(new THREE.CylinderGeometry(3.9, 3.9, .04, 96), new THREE.MeshPhysicalMaterial({ color: 0x0b1830, metalness: .3, roughness: .1, transparent: true, opacity: 0, envMapIntensity: 1.5 }));
-  glassPlate.position.y = UNIT_Y - .03; glassPlate.receiveShadow = true; stageG.add(glassPlate);
+  glassPlate.position.y = UNIT_Y - .03; glassPlate.receiveShadow = false; stageG.add(glassPlate);
   // مخاريط ضوء
   const coneMat = (col) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     uniforms: { uCol: { value: new THREE.Color(col) }, uOp: { value: 0 } },
@@ -167,7 +167,7 @@ function build(gltf) {
 
   // ---------------- إضاءة المنصة ----------------
   const key = new THREE.SpotLight(0xf2f6ff, 0, 40, .5, .55, 1.6); key.position.copy(STAGE).add(V(-4, 13, 7)); key.castShadow = QUALITY > 0;
-  key.shadow.mapSize.set(QUALITY === 2 ? 2048 : 1024, QUALITY === 2 ? 2048 : 1024); key.shadow.bias = -.0003; key.shadow.normalBias = .02;
+  key.shadow.mapSize.set(QUALITY === 2 ? 2048 : 1024, QUALITY === 2 ? 2048 : 1024); key.shadow.bias = -.0006; key.shadow.normalBias = .04;
   key.target.position.copy(STAGE).setY(UNIT_Y + .8); scene.add(key, key.target);
   const spotA = new THREE.SpotLight(0x2fd4ff, 0, 40, .55, .6, 1.6); spotA.position.copy(STAGE).add(V(9, 9, -6)); spotA.target.position.copy(STAGE).setY(1.8); scene.add(spotA, spotA.target);
   const spotB = new THREE.SpotLight(0xa77bff, 0, 40, .55, .6, 1.6); spotB.position.copy(STAGE).add(V(-9, 7, -5)); spotB.target.position.copy(STAGE).setY(1.8); scene.add(spotB, spotB.target);
@@ -404,6 +404,10 @@ function build(gltf) {
   composer.addPass(new RenderPass(scene, camera));
   const fxObjs = [...beams, dust, sparks, shards, beacon];
   // عمق الميدان أُزيل: كان يسبب سواد نصف الشاشة على بعض الأجهزة عند تشغيله وإطفائه
+  // حماية من بكسلات NaN/Inf التي يحوّلها التوهج إلى بقع سوداء تظهر وتختفي
+  composer.addPass(new ShaderPass({ uniforms: { tDiffuse: { value: null } },
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: "uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0); gl_FragColor = vec4(clamp(c.rgb, 0.0, 40.0), clamp(c.a, 0.0, 1.0)); }" }));
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .55, .5, .86); composer.addPass(bloom);
   composer.addPass(new OutputPass());
   function layout() {
@@ -452,7 +456,7 @@ function build(gltf) {
       if (t < IMP) { hz = crashZ0 - v0 * t + acc * t * t / 2; }
       else {
         if (impactAt < 0) { impactAt = crashT; sim.ev = now; shake = 1;
-          const ip = V(LANE, .75, ZC + 2.05); flashL.position.copy(ip); shock.position.copy(ip).setY(.05);
+          const ip = V(LANE, .75, ZC + 2.05); flashL.position.copy(ip); shock.position.copy(ip).setY(.12);
           spVel.length = 0; for (let i = 0; i < NSP; i++) { spPos.set([ip.x + (Math.random() - .5) * 1.8, ip.y + (Math.random() - .5) * .4, ip.z], i * 3); spVel.push(V((Math.random() - .5) * 9, Math.random() * 6 + 1, (Math.random() - .7) * 9)); }
           glVel.length = 0; for (let i = 0; i < NGL; i++) { glPos.set([ip.x + (Math.random() - .5) * 1.6, ip.y + .3 + Math.random() * .4, ip.z + .3], i * 3); glVel.push(V((Math.random() - .5) * 6, Math.random() * 4, (Math.random() - .3) * 5)); }
           const fl = $("flash"); fl.style.transition = "none"; fl.style.opacity = ".45"; requestAnimationFrame(() => { fl.style.transition = "opacity 600ms ease-out"; fl.style.opacity = "0"; }); }
@@ -508,7 +512,7 @@ function build(gltf) {
     if (dust.visible) { const a = dg.attributes.position.array; for (let i = 0; i < ND; i++) { a[i * 3 + 1] += rawDt * .12; if (a[i * 3 + 1] > 9) a[i * 3 + 1] = 0; } dg.attributes.position.needsUpdate = true; }
     crashLight.intensity = lerp(crashLight.intensity, ["crash", "inside", "result", "end"].includes(s.id) ? 220 : 0, .05);
     crashLight.color.set(crashed ? (Math.sin(now * 8) > 0 ? "#ff5a6e" : "#3b82ff") : "#ffffff");
-    sky.userData.mat.uniforms.uGlow.value.copy(moodCol).multiplyScalar(.5).lerp(tc.set("#3a2a7a"), .5);
+    sky.position.copy(camera.position); sky.userData.mat.uniforms.uGlow.value.copy(moodCol).multiplyScalar(.5).lerp(tc.set("#3a2a7a"), .5);
 
     // --- إمساك الحساسات ---
     const EXP = { mic: V(-.5, 1.05, -.3), mpu: V(-.3, 1.3, -.55), gps: V(.05, 1.55, -.3), gpsAnt: V(-.45, 1.2, .5), gsm: V(.55, 1.15, -.45), esp: V(0, .9, .55) };
