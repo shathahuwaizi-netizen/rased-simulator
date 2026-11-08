@@ -192,3 +192,5 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .lost { position: fixed; inset: 0; z-index: 30; display: grid; place-content: center; justify-items: center; gap: 14px; background: rgba(3,6,14,.92); font-size: 15px; }
 .lost[hidden] { display: none; }
 .glass { text-shadow: 0 1px 8px rgba(0,0,0,.65); }
+.vsel { max-width: 190px; padding: 7px 10px; cursor: pointer; appearance: auto; }
+.vsel option { background: #0b1530; color: #e8f4ff; }

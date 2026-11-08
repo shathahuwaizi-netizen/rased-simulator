@@ -374,12 +374,24 @@ function build(gltf) {
   playBtn.onclick = () => (playing ? stopPlay() : startPlay());
   const stepDur = (s) => clamp(s._words / 2.25 + 2.4, 8, 26) + (s.id === "crash" ? 3 : 0) + (s.id === "drive" ? 4 : 0);
   let arVoice = null, enVoice = null;
+  let voicePref = ""; try { voicePref = localStorage.getItem("rased-voice") || ""; } catch (e) {}
+  const vsel = $("voice-sel");
+  // اسم مختصر وواضح لكل صوت في القائمة
+  const vLabel = (v) => { const n = v.name.replace(/^Microsoft\s+/i, "").replace(/\s*Online\s*\(Natural\)/i, "").split(" - ")[0];
+    const reg = /SA/i.test(v.lang) ? "سعودي" : /AE/i.test(v.lang) ? "إماراتي" : /KW/i.test(v.lang) ? "كويتي" : /QA/i.test(v.lang) ? "قطري" : /BH/i.test(v.lang) ? "بحريني" : /OM/i.test(v.lang) ? "عُماني" : /EG/i.test(v.lang) ? "مصري" : v.lang;
+    return `${n} · ${reg}${/natural|online|neural/i.test(v.name) ? " ★" : ""}`; };
   const pickVoice = () => { if (!("speechSynthesis" in window)) return;
-    // نفضّل الأصوات العصبية الطبيعية (Edge: Microsoft Hamed/Zariyah Online (Natural)) ثم اللهجة السعودية
-    const score = (v) => (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/^ar[-_]SA/i.test(v.lang) ? 8 : 0) + (/hamed|حامد/i.test(v.name) ? 3 : 0) + (/google/i.test(v.name) ? 4 : 0) + (v.localService ? 0 : 1);
-    const vs = speechSynthesis.getVoices(); const ar = vs.filter((v) => /^ar/i.test(v.lang)).sort((a, b) => score(b) - score(a)); arVoice = ar[0] || null;
+    // الأولوية: الأصوات السعودية الطبيعية (Hamed / Zariyah في Edge)، ثم الخليجية، ثم أي صوت عربي
+    const gulf = /^ar[-_](SA|AE|KW|QA|BH|OM)/i;
+    const score = (v) => (/^ar[-_]SA/i.test(v.lang) ? 40 : gulf.test(v.lang) ? 25 : 0) + (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/hamed|حامد/i.test(v.name) ? 4 : 0) + (/google/i.test(v.name) ? 3 : 0);
+    const vs = speechSynthesis.getVoices(); const ar = vs.filter((v) => /^ar/i.test(v.lang)).sort((a, b) => score(b) - score(a));
+    arVoice = ar.find((v) => v.name === voicePref) || ar[0] || null;
+    if (vsel && ar.length) { vsel.hidden = ar.length < 2; const sig = ar.map((v) => v.name).join("|");
+      if (vsel.dataset.sig !== sig) { vsel.dataset.sig = sig; vsel.innerHTML = ar.map((v) => `<option value="${v.name.replace(/"/g, "&quot;")}">${vLabel(v)}</option>`).join(""); }
+      vsel.value = arVoice ? arVoice.name : ""; }
     const es = (v) => (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/^en[-_]US/i.test(v.lang) ? 5 : 0) + (/^en[-_]GB/i.test(v.lang) ? 3 : 0) + (/google/i.test(v.name) ? 4 : 0);
     enVoice = vs.filter((v) => /^en/i.test(v.lang)).sort((a, b) => es(b) - es(a))[0] || null; };
+  if (vsel) vsel.onchange = () => { voicePref = vsel.value; try { localStorage.setItem("rased-voice", voicePref); } catch (e) {} pickVoice(); if (!voiceOn) voiceBtn.click(); else speak(cur()); };
   const SAY = { "MPU6050": "M P U sixty fifty", "ESP32": "E S P thirty-two", "SIM800L": "SIM eight hundred L", "INMP441": "I N M P four four one", "SIM800L GSM": "SIM eight hundred L, G S M", "GPS": "G P S", "GSM": "G S M" };
   if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function speak(s) {
@@ -393,7 +405,7 @@ function build(gltf) {
         const en = enVoice && /^[A-Za-z]/.test(t.trim());
         const u = new SpeechSynthesisUtterance(en ? (SAY[t.trim()] || t.trim()) : t);
         if (en) { u.voice = enVoice; u.lang = enVoice.lang; u.rate = .95; }
-        else { u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = /natural|online|neural/i.test(arVoice?.name || "") ? 1 : .92; }
+        else { u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = /natural|online|neural/i.test(arVoice?.name || "") ? .95 : .9; u.pitch = .98; }
         const base = off, nW = t.trim().split(/\s+/).length; off += nW;
         u.onboundary = (e) => { if (!en) wordsShown = Math.max(wordsShown, base + t.slice(0, e.charIndex).trim().split(/\s+/).filter(Boolean).length); };
         u.onend = () => { wordsShown = Math.max(wordsShown, base + nW); if (i === segs.length - 1) speechDone = true; };
