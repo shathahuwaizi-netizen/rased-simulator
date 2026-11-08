@@ -48,8 +48,8 @@ async function init() {
 
 function build(gltf) {
   const canvasEl = $("cv");
-  const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: TEST });
-  let DPR = Math.min(devicePixelRatio || 1, QUALITY === 2 ? 1.6 : 1);
+  const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: false, powerPreference: "default", preserveDrawingBuffer: TEST });
+  let DPR = Math.min(devicePixelRatio || 1, QUALITY === 2 ? 1.25 : 1);
   renderer.setPixelRatio(DPR); renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = QUALITY > 0; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -399,7 +399,7 @@ function build(gltf) {
   addEventListener("touchend", (e) => { if (tx0 == null) return; const dx = e.changedTouches[0].clientX - tx0; if (Math.abs(dx) > 60) { stopPlay(); dx > 0 ? next() : prev(); } tx0 = null; }, { passive: true });
 
   // ---------------- ما بعد المعالجة + جودة تتكيف مع الجهاز ----------------
-  const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: QUALITY === 2 ? 4 : 0 });
+  const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: 0 });
   const composer = new EffectComposer(renderer, rt); composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
   composer.addPass(new RenderPass(scene, camera));
   const fxObjs = [...beams, dust, sparks, shards, beacon];
