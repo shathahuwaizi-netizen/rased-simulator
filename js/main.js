@@ -107,6 +107,7 @@ function build(gltf) {
       o.material = m;
     });
     const wheels = ["WheelFrontL", "WheelFrontR", "WheelRearL", "WheelRearR"].map((n) => inner.getObjectByName(n)).filter(Boolean);
+    wheels.forEach((w) => { w.quaternion.identity(); w.updateMatrixWorld(true); [...w.children].filter((c) => /BrakePad/.test(c.name)).forEach((c) => w.parent.attach(c)); });
     // إضاءة أرضية وأضواء أمامية
     const under = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.8), new THREE.MeshBasicMaterial({ map: T.glowTexture("rgba(47,212,255,.9)"), transparent: true, opacity: name === "hero" ? .5 : 0, depthWrite: false, blending: THREE.AdditiveBlending, color: name === "hero" ? 0x2fd4ff : 0xffffff }));
     under.rotation.x = -Math.PI / 2; under.rotation.z = Math.PI / 2; under.position.y = .06; under.renderOrder = 2; root.add(under);
@@ -340,7 +341,7 @@ function build(gltf) {
     const sen = SENSORS[s.sensor] || null;
     m.classList.toggle("is-final", s.id === "end");
     $("mark-num").textContent = s.id === "end" ? "شكراً" : sen ? String(sen.n).padStart(2, "0") : "";
-    $("mark-name").textContent = s.id === "end" ? "رصد · كشف أسرع، استجابة أسرع" : sen ? sen.name : CHAPTERS[s.ch].name;
+    $("mark-name").textContent = s.id === "end" ? "راصد · رصد ذكي، وتحقّق قبل التنبيه" : sen ? sen.name : CHAPTERS[s.ch].name;
     m.style.setProperty("--mc", sen ? sen.color : C.cyan);
     if (!sen && !["end", "inside", "fusion"].includes(s.id)) return;
     m.classList.add("is-on"); if (s.id !== "end") markTimer = setTimeout(() => m.classList.remove("is-on"), 1900);

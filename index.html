@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <title>رصد · من الحادث إلى الحساسات</title>
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <title>راصد · محاكاة كشف الحوادث</title>
+  <link rel="stylesheet" href="css/style.css?v=6">
   <script type="importmap">
   { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
   </script>
@@ -16,11 +16,11 @@
   <div class="vignette" aria-hidden="true"></div>
   <div class="flash" id="flash" aria-hidden="true"></div>
   <div class="cut" id="cut" aria-hidden="true"></div>
-  <div class="lost" id="lost" hidden><p>كرت الشاشة توقف لحظياً، جارٍ إعادة تشغيل المشهد بجودة أخف…</p><button class="btn btn--primary" type="button" onclick="location.reload()">إعادة التشغيل الآن</button></div>
+  <div class="lost" id="lost" hidden><p>جارٍ إعادة تحميل المشهد</p><button class="btn btn--primary" type="button" onclick="location.reload()">إعادة التشغيل الآن</button></div>
 
   <div class="loader" id="loader" role="status">
     <svg class="loader__mark" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4c-8.3 0-15 6.5-15 14.6C9 30 24 44 24 44s15-14 15-25.4C39 10.5 32.3 4 24 4z" fill="none" stroke="#2fd4ff" stroke-width="2.4"/><path d="M19 26V13h6.2a4.3 4.3 0 0 1 0 8.6H19m6 0 5 4.4" fill="none" stroke="#2fd4ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <p class="loader__title">رصد · <span dir="ltr">Rased AI</span></p>
+    <p class="loader__title">راصد · <span dir="ltr">Rased AI</span></p>
     <div class="loader__bar"><span id="loadfill"></span></div>
     <p class="loader__step" id="loadstep">تجهيز المشهد</p>
     <button class="btn btn--primary loader__go" id="go" type="button" hidden>ابدأ العرض</button>
@@ -29,9 +29,9 @@
   <header class="top">
     <div class="brand">
       <svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true"><path d="M24 4c-8.3 0-15 6.5-15 14.6C9 30 24 44 24 44s15-14 15-25.4C39 10.5 32.3 4 24 4z" fill="none" stroke="#2fd4ff" stroke-width="2.6"/><path d="M19 26V13h6.2a4.3 4.3 0 0 1 0 8.6H19m6 0 5 4.4" fill="none" stroke="#2fd4ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>رصد <i dir="ltr">RASED</i></b><small>من لحظة الحادث إلى داخل الجهاز · حساس حساس</small></span>
+      <span><b>راصد <i dir="ltr">RASED</i></b><small>محاكاة لحظة حادث وآلية عمل النظام</small></span>
     </div>
-    <div class="badges"><span class="badge" id="badge-sim" hidden>القراءات الحية محاكاة توضيحية · قيم «من الاختبار الفعلي» من سجل النموذج</span></div>
+    <div class="badges"><span class="badge" id="badge-sim" hidden>القراءات الحية توضيحية · قيم الاختبار من النموذج الأولي</span></div>
     <div class="actions">
       <button class="btn btn--primary" id="btn-play" type="button" aria-pressed="false">
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path class="i-play" d="M7 5v14l12-7z"/><path class="i-pause" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg><span>تشغيل كفيلم</span></button>
@@ -58,6 +58,6 @@
   </footer>
 
   <noscript><p class="noscript">هذا العرض يحتاج تفعيل JavaScript و WebGL.</p></noscript>
-  <script type="module" src="js/main.js?v=5"></script>
+  <script type="module" src="js/main.js?v=6"></script>
 </body>
 </html>
