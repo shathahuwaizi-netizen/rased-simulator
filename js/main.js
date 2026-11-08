@@ -374,11 +374,14 @@ function build(gltf) {
   playBtn.onclick = () => (playing ? stopPlay() : startPlay());
   const stepDur = (s) => clamp(s._words / 2.25 + 2.4, 8, 26) + (s.id === "crash" ? 3 : 0) + (s.id === "drive" ? 4 : 0);
   let arVoice = null;
-  const pickVoice = () => { if (!("speechSynthesis" in window)) return; const vs = speechSynthesis.getVoices(); arVoice = vs.find((v) => /^ar[-_]SA/i.test(v.lang)) || vs.find((v) => /^ar/i.test(v.lang)) || null; };
+  const pickVoice = () => { if (!("speechSynthesis" in window)) return;
+    // نفضّل الأصوات العصبية الطبيعية (Edge: Microsoft Hamed/Zariyah Online (Natural)) ثم اللهجة السعودية
+    const score = (v) => (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/^ar[-_]SA/i.test(v.lang) ? 8 : 0) + (/hamed|حامد/i.test(v.name) ? 3 : 0) + (/google/i.test(v.name) ? 4 : 0) + (v.localService ? 0 : 1);
+    const ar = speechSynthesis.getVoices().filter((v) => /^ar/i.test(v.lang)).sort((a, b) => score(b) - score(a)); arVoice = ar[0] || null; };
   if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function speak(s) {
     speechDone = true; if (!voiceOn || !("speechSynthesis" in window)) return;
-    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(s.narr); u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice;
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(s.narr); u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = /natural|online|neural/i.test(arVoice?.name || "") ? 1 : .92; u.pitch = 1;
       speechDone = false; u.onend = u.onerror = () => { speechDone = true; };
       u.onboundary = (e) => { wordsShown = Math.max(wordsShown, s.narr.slice(0, e.charIndex).split(" ").length); };
       speechSynthesis.speak(u); } catch (e) { speechDone = true; }
