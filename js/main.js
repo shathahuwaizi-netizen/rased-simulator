@@ -402,11 +402,8 @@ function build(gltf) {
   const rt = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: QUALITY === 2 ? 4 : 0 });
   const composer = new EffectComposer(renderer, rt); composer.setPixelRatio(DPR); composer.setSize(innerWidth, innerHeight);
   composer.addPass(new RenderPass(scene, camera));
-  const bokeh = new BokehPass(scene, camera, { focus: 10, aperture: .0004, maxblur: .006 });
   const fxObjs = [...beams, dust, sparks, shards, beacon];
-  const bokehRender = bokeh.render.bind(bokeh);
-  bokeh.render = (...a) => { const hid = fxObjs.filter((o) => o.visible); hid.forEach((o) => (o.visible = false)); bokehRender(...a); hid.forEach((o) => (o.visible = true)); };
-  composer.addPass(bokeh); bokeh.enabled = false;
+  // عمق الميدان أُزيل: كان يسبب سواد نصف الشاشة على بعض الأجهزة عند تشغيله وإطفائه
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .55, .5, .86); composer.addPass(bloom);
   composer.addPass(new OutputPass());
   function layout() {
@@ -415,7 +412,7 @@ function build(gltf) {
   }
   addEventListener("resize", layout); layout();
   const perf = { n: 0, t: 0, reset() { this.n = 0; this.t = 0; }, tick(dt) {
-    if (TEST || QUALITY === 0) return; this.n++; this.t += dt;
+    return; this.n++; this.t += dt;
     if (this.t > 2.5) { const fps = this.n / this.t; this.reset();
       if (fps < 32 && QUALITY === 2) { QUALITY--; DPR = 1; renderer.setPixelRatio(1); composer.setPixelRatio(1); layout();
         if (QUALITY < 2) key.shadow.mapSize.set(1024, 1024); if (QUALITY === 0) { renderer.shadowMap.enabled = false; key.castShadow = false; }
@@ -587,8 +584,6 @@ function build(gltf) {
     if (!REDUCED) { look.x += Math.sin(now * .7) * .012; look.y += Math.sin(now * .53) * .01; }
     if (shake > .001) { pos.x += (Math.random() - .5) * shake * .45; pos.y += (Math.random() - .5) * shake * .35; shake *= Math.exp(-rawDt * 2.6); }
     camera.position.copy(pos); camState.look.copy(look); camera.lookAt(look); camera.fov = fov; camera.updateProjectionMatrix();
-    bokeh.enabled = QUALITY === 2 && !!single;
-    if (bokeh.enabled) { bokeh.uniforms.focus.value = camera.position.distanceTo(look); bokeh.uniforms.aperture.value = (dest.ap ?? .3) * .0011; bokeh.uniforms.maxblur.value = .007; }
     bloom.strength = lerp(bloom.strength, single ? .32 : s.id === "fusion" ? .26 : .55, .05);
 
     trails.userData.update(now, camera.position, s.id === "drive" ? 1 : .35);
