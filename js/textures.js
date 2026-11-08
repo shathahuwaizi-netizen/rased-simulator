@@ -149,20 +149,35 @@ export function drawTerminal(H, lines, shown, title = "Serial Monitor · 115200 
 export function drawPhone(H, k) {
   const { c, x } = H, w = c.width, h = c.height;
   x.fillStyle = "#000"; x.fillRect(0, 0, w, h);
-  x.fillStyle = "#fff"; x.font = `600 30px ${FONT}`; x.direction = "ltr"; x.textAlign = "left"; x.fillText("7:21", 50, 60);
-  x.textAlign = "right"; x.fillText("5G ▮▮▮", w - 40, 60);
-  x.fillStyle = "#1c1c1e"; x.fillRect(0, 90, w, 170);
-  x.fillStyle = "#8e8e93"; x.beginPath(); x.arc(w / 2, 150, 40, 0, 7); x.fill();
-  x.fillStyle = "#ddd"; x.textAlign = "center"; x.font = `500 24px ${FONT}`; x.fillText("+966 56 274 1287", w / 2, 230);
-  const msgs = ["24.716373,46.641467", "24.716358,46.641459", "24.716435,46.641530"];
-  msgs.forEach((m, i) => {
-    const a = Math.min(1, Math.max(0, k * 3 - i)); if (a <= 0) return;
-    const y = 300 + i * 260 + (1 - a) * 40; x.globalAlpha = a;
-    rr(x, 40, y, w - 140, 200, 30); x.fillStyle = "#2c2c2e"; x.fill();
-    x.textAlign = "left"; x.fillStyle = "#fff"; x.font = `500 30px ${FONT}`; x.fillText("Accident detected!", 70, y + 50); x.fillText("Location:", 70, y + 92);
-    x.fillStyle = "#3d9bff"; x.font = `500 26px ${MONO}`; x.fillText("maps.google.com/?", 70, y + 134); x.fillText("q=" + m, 70, y + 172);
+  x.direction = "ltr"; x.fillStyle = "#fff"; x.font = `600 34px ${FONT}`; x.textAlign = "left"; x.fillText("9:41", 56, 66);
+  x.textAlign = "right"; x.fillText("5G ▮▮▮", w - 48, 66);
+  // رأس المحادثة
+  x.fillStyle = "#1c1c1e"; x.fillRect(0, 100, w, 200);
+  x.fillStyle = "#ff3b5c"; x.beginPath(); x.arc(w / 2, 170, 48, 0, 7); x.fill();
+  x.fillStyle = "#fff"; x.textAlign = "center"; x.font = `700 46px ${FONT}`; x.fillText("!", w / 2, 187);
+  x.font = `600 32px ${FONT}`; x.fillText("Rased · راصد", w / 2, 270);
+  // شارة رسالة جديدة
+  const a0 = Math.min(1, Math.max(0, k * 2.2));
+  x.globalAlpha = a0; rr(x, w / 2 - 170, 330, 340, 64, 32); x.fillStyle = "#3ee08f"; x.fill();
+  x.fillStyle = "#04140b"; x.font = `700 32px ${FONT}`; x.fillText("رسالة جديدة · الآن", w / 2, 374); x.globalAlpha = 1;
+  // فقاعة الرسالة
+  const a = Math.min(1, Math.max(0, k * 2.2 - .35)); if (a > 0) {
+    const y = 440 + (1 - a) * 60; x.globalAlpha = a;
+    rr(x, 36, y, w - 72, 470, 40); x.fillStyle = "#2c2c2e"; x.fill();
+    x.lineWidth = 4; x.strokeStyle = "rgba(255,59,92,.9)"; x.stroke();
+    x.textAlign = "left"; x.fillStyle = "#ff6b81"; x.font = `700 50px ${FONT}`; x.fillText("⚠ Accident", 76, y + 82); x.fillText("detected!", 76, y + 146);
+    x.fillStyle = "#fff"; x.font = `600 40px ${FONT}`; x.fillText("Location:", 76, y + 226);
+    x.fillStyle = "#4da8ff"; x.font = `600 34px ${MONO}`; x.fillText("maps.google.com/", 76, y + 292); x.fillText("?q=24.716373,", 76, y + 344); x.fillText("46.641467", 76, y + 396);
+    x.fillStyle = "#4da8ff"; x.fillRect(76, y + 404, 200, 3);
     x.globalAlpha = 1;
-  });
+  }
+  // معاينة الخريطة
+  const a2 = Math.min(1, Math.max(0, k * 2.2 - .8)); if (a2 > 0) {
+    x.globalAlpha = a2; const y = 940; rr(x, 36, y, w - 72, 130, 30); x.fillStyle = "#0f2a3d"; x.fill();
+    x.fillStyle = "#3ee08f"; x.beginPath(); x.arc(110, y + 65, 30, 0, 7); x.fill();
+    x.fillStyle = "#fff"; x.textAlign = "left"; x.font = `600 32px ${FONT}`; x.fillText("فتح الموقع على الخريطة", 160, y + 76);
+    x.globalAlpha = 1;
+  }
   H.t.needsUpdate = true;
 }
 

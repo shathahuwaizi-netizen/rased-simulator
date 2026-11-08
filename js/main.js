@@ -224,9 +224,9 @@ function build(gltf) {
     fragmentShader: `uniform float uOp; varying float vY; void main(){ float a=(1.-vY)*uOp*.7; gl_FragColor=vec4(vec3(1.,.25,.35)*a*2.,a); }` }));
   beacon.position.set(LANE, 30, ZC); scene.add(beacon);
   const phone = new THREE.Group(); scene.add(phone);
-  const phBody = new THREE.Mesh(new THREE.BoxGeometry(1.25, 2.55, .12), new THREE.MeshStandardMaterial({ color: 0x15171c, metalness: .9, roughness: .25, transparent: true, opacity: 0 })); phone.add(phBody);
+  const phBody = new THREE.Mesh(new THREE.BoxGeometry(1.25, 2.55, .12), new THREE.MeshStandardMaterial({ color: 0x15171c, metalness: .9, roughness: .25, transparent: true, opacity: 0, depthTest: false })); phBody.renderOrder = 50; phone.add(phBody);
   const phC = T.holoCanvas(540, 1100);
-  const phS = new THREE.Mesh(new THREE.PlaneGeometry(1.16, 2.36), new THREE.MeshBasicMaterial({ map: phC.t, toneMapped: false, transparent: true, opacity: 0 })); phS.position.z = .061; phone.add(phS);
+  const phS = new THREE.Mesh(new THREE.PlaneGeometry(1.16, 2.36), new THREE.MeshBasicMaterial({ map: phC.t, color: new THREE.Color(.8, .8, .8), toneMapped: false, transparent: true, opacity: 0, depthTest: false })); phS.position.z = .061; phS.renderOrder = 51; phone.add(phS);
 
   // ---------------- التسميات ----------------
   const labels = [];
@@ -576,7 +576,9 @@ function build(gltf) {
     beacon.material.uniforms.uOp.value = lerp(beacon.material.uniforms.uOp.value, beaconOn ? 1 : 0, .05); beacon.visible = beacon.material.uniforms.uOp.value > .01;
     const phOn = s.id === "result";
     const pk = lerp(phBody.material.opacity, phOn ? 1 : 0, 1 - Math.exp(-rawDt * 3)); phBody.material.opacity = pk; phS.material.opacity = pk; phone.visible = pk > .01;
-    if (phone.visible) { phone.position.set(5.2, 3.6 + Math.sin(now) * .06 - (1 - pk), ZC + 7); phone.lookAt(camera.position); phone.rotateY(-.15); phone.scale.setScalar(1.3);
+    if (phone.visible) { camera.updateMatrixWorld(); const cq = camera.quaternion, dist = 4.6, halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist, halfW = halfH * camera.aspect;
+      phone.position.copy(camera.position).add(V(halfW * .34, -halfH * .03 + Math.sin(now) * .02 - (1 - pk) * .6, -dist).applyQuaternion(cq));
+      phone.quaternion.copy(cq); phone.rotateY(-.12); phone.scale.setScalar(halfH * 1.55 / 2.55);
       if ((frameN & 1) === 0) T.drawPhone(phC, clamp((st - .5) / 2, 0, 1)); }
 
     // --- الكاميرا ---
