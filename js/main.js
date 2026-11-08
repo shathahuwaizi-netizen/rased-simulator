@@ -373,18 +373,33 @@ function build(gltf) {
   function startPlay() { playing = true; playBtn.setAttribute("aria-pressed", "true"); playBtn.querySelector("span").textContent = "إيقاف"; if (idx === STEPS.length - 1) go(0); else stepT0 = now; }
   playBtn.onclick = () => (playing ? stopPlay() : startPlay());
   const stepDur = (s) => clamp(s._words / 2.25 + 2.4, 8, 26) + (s.id === "crash" ? 3 : 0) + (s.id === "drive" ? 4 : 0);
-  let arVoice = null;
+  let arVoice = null, enVoice = null;
   const pickVoice = () => { if (!("speechSynthesis" in window)) return;
     // نفضّل الأصوات العصبية الطبيعية (Edge: Microsoft Hamed/Zariyah Online (Natural)) ثم اللهجة السعودية
     const score = (v) => (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/^ar[-_]SA/i.test(v.lang) ? 8 : 0) + (/hamed|حامد/i.test(v.name) ? 3 : 0) + (/google/i.test(v.name) ? 4 : 0) + (v.localService ? 0 : 1);
-    const ar = speechSynthesis.getVoices().filter((v) => /^ar/i.test(v.lang)).sort((a, b) => score(b) - score(a)); arVoice = ar[0] || null; };
+    const vs = speechSynthesis.getVoices(); const ar = vs.filter((v) => /^ar/i.test(v.lang)).sort((a, b) => score(b) - score(a)); arVoice = ar[0] || null;
+    const es = (v) => (/natural|online|neural/i.test(v.name) ? 20 : 0) + (/^en[-_]US/i.test(v.lang) ? 5 : 0) + (/^en[-_]GB/i.test(v.lang) ? 3 : 0) + (/google/i.test(v.name) ? 4 : 0);
+    enVoice = vs.filter((v) => /^en/i.test(v.lang)).sort((a, b) => es(b) - es(a))[0] || null; };
+  const SAY = { "MPU6050": "M P U sixty fifty", "ESP32": "E S P thirty-two", "SIM800L": "SIM eight hundred L", "INMP441": "I N M P four four one", "SIM800L GSM": "SIM eight hundred L, G S M", "GPS": "G P S", "GSM": "G S M" };
   if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
   function speak(s) {
     speechDone = true; if (!voiceOn || !("speechSynthesis" in window)) return;
-    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(s.narr); u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = /natural|online|neural/i.test(arVoice?.name || "") ? 1 : .92; u.pitch = 1;
-      speechDone = false; u.onend = u.onerror = () => { speechDone = true; };
-      u.onboundary = (e) => { wordsShown = Math.max(wordsShown, s.narr.slice(0, e.charIndex).split(" ").length); };
-      speechSynthesis.speak(u); } catch (e) { speechDone = true; }
+    try { speechSynthesis.cancel();
+      // الأسماء الإنجليزية (MPU6050, GPS…) تُنطق بصوت إنجليزي، وبقية الجملة بالصوت العربي
+      const parts = s.narr.split(/([A-Za-z][A-Za-z0-9-]*(?:[ +][A-Za-z][A-Za-z0-9-]*)*)/).filter((t) => t.trim());
+      const segs = enVoice ? parts : [s.narr];
+      let off = 0; speechDone = false;
+      segs.forEach((t, i) => {
+        const en = enVoice && /^[A-Za-z]/.test(t.trim());
+        const u = new SpeechSynthesisUtterance(en ? (SAY[t.trim()] || t.trim()) : t);
+        if (en) { u.voice = enVoice; u.lang = enVoice.lang; u.rate = .95; }
+        else { u.lang = arVoice?.lang || "ar-SA"; if (arVoice) u.voice = arVoice; u.rate = /natural|online|neural/i.test(arVoice?.name || "") ? 1 : .92; }
+        const base = off, nW = t.trim().split(/\s+/).length; off += nW;
+        u.onboundary = (e) => { if (!en) wordsShown = Math.max(wordsShown, base + t.slice(0, e.charIndex).trim().split(/\s+/).filter(Boolean).length); };
+        u.onend = () => { wordsShown = Math.max(wordsShown, base + nW); if (i === segs.length - 1) speechDone = true; };
+        u.onerror = () => { if (i === segs.length - 1) speechDone = true; };
+        speechSynthesis.speak(u);
+      }); } catch (e) { speechDone = true; }
   }
   const voiceBtn = $("btn-voice");
   voiceBtn.onclick = () => { if (!("speechSynthesis" in window)) { voiceBtn.querySelector("span").textContent = "الصوت غير مدعوم"; return; }
