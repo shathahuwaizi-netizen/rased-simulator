@@ -413,7 +413,7 @@ function build(gltf) {
         speechSynthesis.speak(u);
       }); } catch (e) { speechDone = true; }
   }
-  const voiceBtn = $("btn-voice");
+  const voiceBtn = $("btn-voice") || document.createElement("button"); // التعليق الصوتي محذوف من الواجهة
   voiceBtn.onclick = () => { if (!("speechSynthesis" in window)) { voiceBtn.querySelector("span").textContent = "الصوت غير مدعوم"; return; }
     voiceOn = !voiceOn; voiceBtn.setAttribute("aria-pressed", String(voiceOn)); pickVoice(); if (voiceOn) speak(cur()); else speechSynthesis.cancel(); };
   $("btn-full").onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) { /* */ } };
@@ -422,7 +422,7 @@ function build(gltf) {
     if (["ArrowLeft", "ArrowDown", "PageDown", " ", "Enter"].includes(k)) { e.preventDefault(); stopPlay(); next(); }
     else if (["ArrowRight", "ArrowUp", "PageUp", "Backspace"].includes(k)) { e.preventDefault(); stopPlay(); prev(); }
     else if (k === "Home") { stopPlay(); go(0); } else if (k === "End") { stopPlay(); go(STEPS.length - 1); }
-    else if (k === "p" || k === "P") playBtn.click(); else if (k === "v" || k === "V") voiceBtn.click(); else if (k === "f" || k === "F") $("btn-full").click();
+    else if (k === "p" || k === "P") playBtn.click(); else if (k === "f" || k === "F") $("btn-full").click();
   });
   let wheelLock = 0;
   addEventListener("wheel", (e) => { if (e.target.closest && e.target.closest(".panel")) return; if (performance.now() < wheelLock || Math.abs(e.deltaY) < 12) return; wheelLock = performance.now() + 1100; stopPlay(); e.deltaY > 0 ? next() : prev(); }, { passive: true });
